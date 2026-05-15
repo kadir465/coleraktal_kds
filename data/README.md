@@ -2,22 +2,29 @@
 
 Bu dizin, Kolorektal Klinik Karar Destek Sistemi (KDS) için tüm veri boru hattını (data pipeline) barındırır. Ham demografik ve tıbbi verileri, ara işleme durumlarını ve hem makine öğrenmesi sınıflandırması hem de Doğal Dil İşleme (NLP) modelleri için optimize edilmiş nihai yapılandırılmış veri setlerini içerir.
 
+## Veri Kaynakları
+
+Sistem tek bir kaynağa bağlı kalmamış olup, modelin küresel doğruluğunu ve genellenebilirliğini artırmak için üç ana kaynaktan beslenmektedir:
+1. **NHANES (National Health and Nutrition Examination Survey):** 1999-2000 ve 2001-2002 dönemi Amerikan nüfus anketleri.
+2. **Kaggle Veri Seti 1:** Bağımsız kaynaklardan sağlanan semptomatoloji ve risk faktörleri verisi.
+3. **Kaggle Veri Seti 2:** Farklı demografik gruplara ait ek klinik sonuçlar ve laboratuvar parametreleri.
+
 ## Dizin Yapısı
 
 | Dizin Adı | Açıklama |
 |---|---|
-| **raw_predata** | 1999-2000 ve 2001-2002 yılları için National Health and Nutrition Examination Survey (NHANES) kurumundan elde edilen başlangıç, ham SAS (.xpt) dosyalarını içerir. Bu veri setleri kapsamlı anket yanıtlarını ve laboratuvar bulgularını kapsar. |
-| **processed** | İlk veri temizleme aşamasından kaynaklanan ara CSV dosyalarını içerir. Bu aşama; eksik değerlerin işlenmesini, kategorik değişkenlerin eşlenmesini ve temel özellik çıkarımını (feature extraction) kapsar. |
-| **last_final** | Nihai model eğitiminden hemen önceki veri setini içerir. Bu aşamada, özellik seçimi kesinleşmiş olup sağlıklı denekler ile kanser hastaları arasındaki sınıf dengesizliklerini gidermek için sentetik veri artırımı (SMOTE gibi) uygulanmış olabilir. |
-| **final** | Kesin olarak hazırlanmış veri setlerini içerir. Bu dosyalar kesinlikle dengelenmiş ve formatlanmıştır. Özellikle, yapısal tablo verileri, Büyük Dil Modellerinin (LLM'ler) ve ELECTRA gibi transformer mimarilerinin ince ayarını (fine-tuning) kolaylaştırmak için doğal dil "hasta hikayelerine" dönüştürülmüştür. |
+| **raw_predata** | NHANES kurumundan elde edilen başlangıç SAS (.xpt) dosyalarını ve Kaggle'dan indirilen ham CSV veri setlerini içerir. |
+| **processed** | İlk veri temizleme aşamasından kaynaklanan ara CSV dosyalarını içerir. Bu aşama; eksik değerlerin işlenmesini, farklı kaynaklardan gelen veri setlerinin (NHANES + Kaggle) şemalarının uyumlaştırılmasını ve kategorik değişkenlerin eşlenmesini kapsar. |
+| **last_final** | Nihai model eğitiminden hemen önceki veri setini içerir. Sağlıklı denekler ile kanser hastaları arasındaki sınıf dengesizliklerini gidermek için sentetik veri artırımı (SMOTE) uygulanmıştır. |
+| **final** | Kesin olarak hazırlanmış veri setlerini içerir. Bu dosyalar kesinlikle dengelenmiş ve formatlanmıştır. Yapısal tablo verileri, Büyük Dil Modellerinin (LLM'ler) ve ELECTRA gibi transformer mimarilerinin ince ayarını (fine-tuning) kolaylaştırmak için doğal dil "hasta hikayelerine" dönüştürülmüştür. |
 
 ## Önemli Dosyalar
 
-- **`tibbi_rehber.txt`**: Tıbbi bağlamı, semptom-teşhis korelasyonlarını ve üretken modellerin doğru klinik bağlam sağlamasına yardımcı olan alana özgü bilgileri içeren temel bir referans belgesi.
+- **`tibbi_rehber.txt`**: Retrieval-Augmented Generation (RAG) mimarisinin kalbi olan referans dokümandır. Google Gemini LLM, raporları üretirken sadece hastanın verilerini değil, aynı zamanda bu dosyadan alınan alana özgü tıbbi bağlamı ve semptom-teşhis korelasyonlarını da hesaba katar.
 
 ## Veri İşleme Akışı
 
-1. **Çıkarma (Extraction):** Ham SAS verileri, ilgili kolorektal risk faktörlerini çıkarmak için `scripts/` dizininde bulunan Python betikleri kullanılarak işlenir.
-2. **Dönüşüm (Transformation):** Veriler titiz bir temizleme işleminden geçer. Eksik veri noktaları, alan kısıtlamalarına dayalı olarak atanır (imputation) veya silinir. Sayısal özellikler normalize edilir ve kategorik veriler kodlanır (encoding).
-3. **Hikaye Üretimi (Narrative Generation):** NLP veri işleme hattı için kritik bir adım olup yapılandırılmış tıbbi geçmişler, hasta vaka notlarını taklit eden tutarlı metin paragraflarına programatik olarak dönüştürülür.
-4. **Dengeleme ve Çıktı:** Azınlık sınıflarının (kanser pozitif) uygun şekilde temsil edilmesini sağlamak ve model sapmasını (bias) önlemek için gelişmiş örnekleme teknikleri uygulanır. Nihai veri seti `final` dizinine dışa aktarılır.
+1. **Çıkarma ve Harmonizasyon:** NHANES SAS verileri ve Kaggle CSV dosyaları `scripts/` dizinindeki betiklerle çıkarılır ve standart bir şema altında birleştirilir.
+2. **Dönüşüm:** Veriler titiz bir temizleme işleminden geçer. Eksik veri noktaları atanır veya silinir. Sayısal özellikler normalize edilir.
+3. **Hikaye Üretimi:** ELECTRA NLP boru hattı için yapılandırılmış tıbbi geçmişler, hasta vaka notlarını taklit eden tutarlı metin paragraflarına programatik olarak dönüştürülür.
+4. **Dengeleme ve Çıktı:** Azınlık sınıflarının (kanser pozitif) uygun şekilde temsil edilmesini sağlamak için SMOTE gibi gelişmiş örnekleme teknikleri uygulanır. Nihai veri seti `final` dizinine dışa aktarılır.
