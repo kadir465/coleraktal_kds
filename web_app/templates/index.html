@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>KolonKDS – Kolorektal Kanser Karar Destek Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="/static/style.css"/>
+</head>
+<body>
+<nav>
+  <div class="brand">
+    <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"/></svg></div>
+    <div><div class="brand-title">KolonKDS</div><div class="brand-sub">Kolorektal Kanser KDS</div></div>
+  </div>
+  <span class="nav-badge">🔬 ELECTRA + Gemini + RAG</span>
+</nav>
+
+<div class="hero">
+  <h1>Kolorektal Kanser<br/><span>Klinik Karar Destek Sistemi</span></h1>
+  <p>Yapılandırılmış hasta verisi + serbest metin ile risk skoru hesaplayın. XAI ile açıklanabilir analiz, PII koruma ile güvenli işlem.</p>
+  <div class="hero-pills">
+    <span class="pill"><span>ELECTRA</span>Risk Modeli</span>
+    <span class="pill"><span>RAG</span>Tıbbi Kütüphane</span>
+    <span class="pill"><span>Gemini</span>LLM Açıklama</span>
+    <span class="pill"><span>XAI</span>Açıklanabilir AI</span>
+    <span class="pill"><span>KVKK</span>PII Koruması</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="disclaimer">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span>Bu sistem bir <strong>klinik karar destek aracıdır</strong>, kesin tanı koymaz. Sonuçlar mutlaka bir sağlık profesyoneliyle değerlendirilmelidir.</span>
+  </div>
+
+  <!-- STRUCTURED DATA FORM -->
+  <div class="card">
+    <div class="ch">
+      <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g600)" stroke-width="2.5"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+      <div><h2>Demografik Bilgiler</h2><p>Kesin parametreler ile risk hesaplama doğruluğu artar (QCancer standardı)</p></div>
+    </div>
+    <div class="cb">
+      <div class="fg">
+        <div class="ff"><label>Yaş</label><input type="number" id="age" placeholder="örn. 58" min="18" max="100"/></div>
+        <div class="ff"><label>Cinsiyet</label>
+          <select id="gender"><option value="">Seçiniz</option><option value="male">Erkek</option><option value="female">Kadın</option></select>
+        </div>
+        <div class="ff"><label>Boy (cm)</label><input type="number" id="height" placeholder="örn. 172" min="100" max="220"/></div>
+        <div class="ff"><label>Kilo (kg)</label><input type="number" id="weight" placeholder="örn. 85" min="30" max="250"/>
+          <span id="bmi-badge" class="bmi-badge" style="display:none"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">
+      <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g600)" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+      <div><h2>Aile Öyküsü</h2><p>1. derece akraba bilgisi riski önemli ölçüde değiştirir</p></div>
+    </div>
+    <div class="cb">
+      <div class="fg">
+        <div class="ff"><label>Aile Öyküsü</label>
+          <select id="fam">
+            <option value="none">Yok</option>
+            <option value="first_degree">1. Derece (anne/baba/kardeş)</option>
+            <option value="second_degree">2. Derece (dede/hala/amca)</option>
+          </select>
+        </div>
+        <div class="ff"><label>Akrabada Tanı Yaşı</label><input type="number" id="fam-age" placeholder="örn. 55" min="20" max="90"/></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch">
+      <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g600)" stroke-width="2.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+      <div><h2>Tıbbi Geçmiş & Yaşam Tarzı</h2><p>Tarama geçmişi, kronik hastalıklar ve alışkanlıklar</p></div>
+    </div>
+    <div class="cb">
+      <div class="fg">
+        <div class="ff"><label>Kolonoskopi</label>
+          <select id="colonoscopy">
+            <option value="never">Hiç yapılmadı</option>
+            <option value="normal">Yapıldı – Normal</option>
+            <option value="polyp">Yapıldı – Polip bulundu</option>
+            <option value="advanced">Yapıldı – İleri evre adenom</option>
+          </select>
+        </div>
+        <div class="ff"><label>FOBT/FIT (Gizli Kan)</label>
+          <select id="fobt">
+            <option value="">Yapılmadı / Bilinmiyor</option>
+            <option value="positive">Pozitif</option>
+            <option value="negative">Negatif</option>
+          </select>
+        </div>
+        <div class="ff"><label>İnflamatuar Bağırsak Has.</label>
+          <select id="ibd">
+            <option value="none">Yok</option>
+            <option value="uc">Ülseratif Kolit</option>
+            <option value="crohn">Crohn Hastalığı</option>
+          </select>
+        </div>
+        <div class="ff"><label>Sigara</label>
+          <select id="smoking"><option value="never">Hiç kullanmadım</option><option value="yes">Kullanıyorum</option><option value="former">Bıraktım</option></select>
+        </div>
+        <div class="ff"><label>Alkol</label>
+          <select id="alcohol"><option value="no">Kullanmıyorum</option><option value="yes">Kullanıyorum</option></select>
+        </div>
+        <div class="ff"><label>Fiziksel Aktivite</label>
+          <select id="activity"><option value="moderate">Orta/Aktif</option><option value="low">Hareketsiz</option><option value="high">Çok Aktif</option></select>
+        </div>
+        <div class="ff"><label>Beslenme</label>
+          <select id="diet"><option value="balanced">Dengeli</option><option value="processed">İşlenmiş/Kırmızı et ağırlıklı</option></select>
+        </div>
+        <div class="ff"><label>Diyabet</label>
+          <select id="diabetes"><option value="no">Yok</option><option value="yes">Var (Tip 2)</option></select>
+        </div>
+        <div class="ff"><label>Hipertansiyon</label>
+          <select id="hypertension"><option value="no">Yok</option><option value="yes">Var</option></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FREE TEXT -->
+  <div class="card">
+    <div class="ch">
+      <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g600)" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+      <div><h2>Serbest Metin – Hasta Şikayetleri</h2><p>Belirtileri kendi cümlelerinizle anlatın (isteğe bağlı)</p></div>
+    </div>
+    <div class="cb">
+      <div class="chips">
+        <span class="chip" onclick="addTpl('kanama')">🩸 Rektal kanama</span>
+        <span class="chip" onclick="addTpl('kilo')">⚖️ Kilo kaybı</span>
+        <span class="chip" onclick="addTpl('barsak')">🔄 Bağırsak değişikliği</span>
+        <span class="chip" onclick="addTpl('aile')">👨‍👩‍👧 Aile öyküsü</span>
+        <span class="chip" onclick="addTpl('yorgunluk')">😴 Yorgunluk &amp; anemi</span>
+        <span class="chip" onclick="addTpl('genel')">📝 Genel muayene</span>
+      </div>
+      <textarea id="pt" placeholder="Örnek: Son 2 aydır ince dışkı ve zaman zaman kan görüyorum. Nedensiz yorgunluk ve 4 kg kilo kaybı yaşadım…"></textarea>
+      <div class="char-c"><span id="cn">0</span> karakter</div>
+      <div class="privacy-note">
+        🔒 <span><strong>KVKK/HIPAA Koruması:</strong> İsim, TC kimlik no, telefon, e-posta gibi kişisel veriler Gemini'ye iletilmeden önce otomatik olarak maskelenir. Lütfen gerçek kişisel bilgiler girmekten kaçının.</span>
+      </div>
+      <button class="btn-main" id="btn" onclick="analyze()">
+        <span id="btn-txt">🔬 Analiz Et</span>
+        <div class="spin" id="spin"></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="result" style="display:none">
+    <div class="pii-alert" id="pii-alert" style="display:none">
+      <span></span>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g600)" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <h2>Risk Analizi Sonucu</h2>
+      </div>
+      <div id="gw" class="gauge-wrap">
+        <div class="g-label">KANSERRİSK SKORU</div>
+        <div class="g-score" id="g-score">--%</div>
+        <div class="g-verdict" id="g-verdict">--</div>
+        <div class="g-conf" id="g-conf">--</div>
+        <div class="g-bar-wrap">
+          <div class="g-bar"><div class="g-fill" id="g-fill" style="width:0%"></div></div>
+          <div class="g-bl"><span>Düşük Risk</span><span>Yüksek Risk</span></div>
+        </div>
+      </div>
+      <div class="bars">
+        <div class="bar-item"><div class="bi-lbl">🔴 Kanser Riski</div><div class="bi-val" id="b-risk" style="color:var(--red600)">--%</div><div class="mbar"><div class="mbar-f" id="bf-risk" style="width:0%;background:var(--red500)"></div></div></div>
+        <div class="bar-item"><div class="bi-lbl">🟢 Sağlıklı Olasılık</div><div class="bi-val" id="b-healthy" style="color:var(--g600)">--%</div><div class="mbar"><div class="mbar-f" id="bf-healthy" style="width:0%;background:var(--g500)"></div></div></div>
+        <div class="bar-item"><div class="bi-lbl">🎯 Model Güveni</div><div class="bi-val" id="b-conf" style="color:var(--purple500)">--%</div><div class="mbar"><div class="mbar-f" id="bf-conf" style="width:0%;background:var(--purple500)"></div></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g600)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        <div><h2>Açıklanabilir AI (XAI) – Risk Kelimeleri</h2><p>Model kararını etkileyen belirteçler renklendirilerek gösterilmiştir</p></div>
+      </div>
+      <div class="xai-wrap">
+        <div class="kw-legend" id="kw-legend"></div>
+        <div style="font-size:.73rem;color:var(--slate400);margin-bottom:.6rem;display:flex;gap:1rem;flex-wrap:wrap">
+          <span><span class="kw-critical" style="border-radius:3px;padding:0 4px">■</span> Kritik belirti</span>
+          <span><span class="kw-high" style="border-radius:3px;padding:0 4px">■</span> Yüksek risk</span>
+          <span><span class="kw-medium" style="border-radius:3px;padding:0 4px">■</span> Orta risk</span>
+        </div>
+        <div class="xai-text" id="xai-txt"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <div class="ch-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g600)" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h2>DEÜ Aİ – Klinik Değerlendirme</h2>
+      </div>
+      <div id="llm-c">
+        <div class="llm-loading"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>Bekleniyor…</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>KolonKDS v2.0 &nbsp;|&nbsp; ELECTRA · Gemini · RAG · XAI · KVKK &nbsp;|&nbsp; Yalnızca klinik destek amaçlıdır, tanı koymaz.</footer>
+<script src="/static/app.js"></script>
+</body>
+</html>

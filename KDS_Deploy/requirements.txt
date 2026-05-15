@@ -1,0 +1,11 @@
+flask
+flask-cors
+google-generativeai
+torch
+transformers
+sentence-transformers
+langchain-community
+langchain-text-splitters
+chromadb
+numpy
+scikit-learn

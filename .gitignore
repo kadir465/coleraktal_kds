@@ -1,0 +1,30 @@
+# Virtual Environments
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+
+# Large Model Files and Data Files
+*.safetensors
+*.bin
+*.h5
+*.pkl
+*.csv
+*.xpt
+
+# Ignore contents of data and models but keep the directories and READMEs
+data/*/*
+models/*/*
+!data/*/README.md
+!models/*/README.md
+!data/README.md
+!models/README.md
+!data/tibbi_rehber.txt
+
+# Ignore local configuration and secrets
+.env
+.DS_Store
+
+# Logs
+*.log
