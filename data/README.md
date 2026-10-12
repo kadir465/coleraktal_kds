@@ -20,7 +20,7 @@ Sistem tek bir kaynağa bağlı kalmamış olup, modelin küresel doğruluğunu 
 
 ## Önemli Dosyalar
 
-- **`tibbi_rehber.txt`**: Retrieval-Augmented Generation (RAG) mimarisinin kalbi olan referans dokümandır. Google Gemini LLM, raporları üretirken sadece hastanın verilerini değil, aynı zamanda bu dosyadan alınan alana özgü tıbbi bağlamı ve semptom-teşhis korelasyonlarını da hesaba katar.
+- **`tibbi_rehber.txt`**: Retrieval-Augmented Generation (RAG) mimarisinin referans dokümanıdır. Google Gemini LLM, raporları üretirken sadece hastanın verilerini değil, aynı zamanda bu dosyadan alınan alana özgü tıbbi bağlamı ve semptom-risk ilişkilerini de hesaba katar.
 
 ## Veri İşleme Akışı
 
