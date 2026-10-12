@@ -25,11 +25,17 @@ BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR     = os.path.dirname(BASE_DIR)
 MODEL_PATH     = os.path.join(PARENT_DIR, "models", "Kanser_Riski_Modeli_Temiz")
 REHBER_PATH    = os.path.join(PARENT_DIR, "tibbi_rehber.txt")
-GOOGLE_API_KEY = "AIzaSyDJ6SDiGaNux3SMlpkvtt-ucwXUeSdFOBs"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip()
 
-# Çalışan script'deki pattern: modül seviyesinde configure + model
-genai.configure(api_key=GOOGLE_API_KEY)
-_llm_model = genai.GenerativeModel('gemini-2.5-flash')
+_llm_model = None
+if GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        _llm_model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+    except Exception as e:
+        logger.error(f"Gemini yapılandırma hatası: {e}")
+        _llm_model = None
 
 _electra_model     = None
 _electra_tokenizer = None

@@ -9,10 +9,9 @@ import google.generativeai as genai
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
-# Tüm olası API key çakışmalarını temizle
-for _k in ["GOOGLE_API_KEY", "GEMINI_API_KEY", "GENAI_API_KEY", "GOOGLE_GENAI_API_KEY"]:
-    if _k in os.environ:
-        del os.environ[_k]
+# Ortam değişkenlerinden yapılandırma
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
+GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip()
 
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -29,11 +28,17 @@ BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH     = os.path.join(BASE_DIR, "Kanser_Riski_Modeli_Temiz")
 REHBER_PATH    = os.path.join(BASE_DIR, "tibbi_rehber.txt")
 
-GOOGLE_API_KEY = "AIzaSyDJ6SDiGaNux3SMlpkvtt-ucwXUeSdFOBs"
-
-genai.configure(api_key=GOOGLE_API_KEY)
-# MODEL GÜNCELLENDİ
-_llm_model = genai.GenerativeModel('gemini-flash-latest')
+_llm_model = None
+if GEMINI_API_KEY:
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+        _llm_model = genai.GenerativeModel(GEMINI_MODEL_NAME)
+        logger.info(f"Gemini LLM yapılandırıldı. Model: {GEMINI_MODEL_NAME}")
+    except Exception as e:
+        logger.error(f"Gemini yapılandırma hatası: {e}")
+        _llm_model = None
+else:
+    logger.warning("GEMINI_API_KEY tanımlı değil. LLM açıklamaları devre dışı.")
 
 _electra_model     = None
 _electra_tokenizer = None
@@ -202,6 +207,8 @@ def load_rag():
     return _rag_model, _rag_chunks, _rag_embeddings
 
 def _gemini_generate(prompt: str) -> str:
+    if _llm_model is None:
+        raise RuntimeError("Gemini modeli yapılandırılmamış.")
     cevap = _llm_model.generate_content(prompt)
     return cevap.text
 
@@ -289,14 +296,17 @@ def analyze():
         context = retrieve_context(clean_text)
 
         llm_text = ""
-        if GOOGLE_API_KEY:
+        active_model = None
+        if _llm_model is not None:
             try:
+                logger.info(f"LLM açıklaması üretiliyor (Model: {GEMINI_MODEL_NAME})...")
                 llm_text = get_llm_explanation(clean_text, risk_result, context, keywords)
+                active_model = GEMINI_MODEL_NAME
             except Exception as e:
                 logger.error(f"LLM hatası: {e}")
                 llm_text = f"⚠️ LLM açıklaması alınamadı: {e}"
         else:
-            llm_text = "⚠️ GOOGLE_API_KEY tanımlı değil. LLM devre dışı."
+            llm_text = "⚠️ GEMINI_API_KEY tanımlı değil. LLM risk açıklaması devre dışı bırakıldı."
 
         return jsonify({
             "success":         True,
@@ -305,6 +315,7 @@ def analyze():
             "confidence":      risk_result["confidence"],
             "label":           risk_result["label"],
             "llm_explanation": llm_text,
+            "llm_model":       active_model,
             "highlighted_text": highlighted,
             "keywords":        keywords,
             "pii_found":       pii_found,
@@ -317,7 +328,11 @@ def analyze():
 
 @app.route("/api/health", methods=["GET"])
 def health():
-    return jsonify({"status": "ok", "gemini_configured": bool(GOOGLE_API_KEY)})
+    return jsonify({
+        "status": "ok",
+        "gemini_configured": _llm_model is not None,
+        "gemini_model": GEMINI_MODEL_NAME if _llm_model is not None else None
+    })
 
 if __name__ == "__main__":
     logger.info("🏥 KDS Web Uygulaması başlatılıyor…")

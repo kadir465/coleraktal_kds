@@ -24,6 +24,8 @@ models/*/*
 
 # Ignore local configuration and secrets
 .env
+.env.*
+*.env
 .DS_Store
 
 # Logs
