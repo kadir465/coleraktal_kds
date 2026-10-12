@@ -49,23 +49,45 @@ _rag_embeddings    = None
 # ─────────────────────────────────────────────────────────
 # 1. PII FILTER  (KVKK / HIPAA uyum)
 # ─────────────────────────────────────────────────────────
+# Not: Tıbbi ifadelerin ("Ülseratif Kolit", "Dışkıda Gizli Kan Testi POZİTİF")
+# yanlışlıkla isim olarak maskelenmemesi için isim tespiti bağlam ipuçlarına bağlanmıştır.
+NAME_CONTEXT_PATTERN = re.compile(
+    r'(?i:\b(?:adım|ismim|ben|hasta(?:nın)?\s+(?:adı|ismi)?)\s*:?\s*)'
+    r'([A-ZÇĞİÖŞÜ][a-zçğışöü]+(?:\s+[A-ZÇĞİÖŞÜ][a-zçğışöü]+){1,2})\b'
+)
+
+# Öncelik sırası: Uzun ve spesifik desenler (IBAN, E-posta, TC) önce çalışmalıdır
 PII_PATTERNS = [
-    (re.compile(r'\b[1-9]\d{10}\b'),                      "[KİMLİK_NO]"),
-    (re.compile(r'(\+90|0)[\s\-]?(\d[\s\-]?){10}'),       "[TELEFON]"),
-    (re.compile(r'[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}'), "[EPOSTA]"),
-    (re.compile(r'\b\d{1,2}[./]\d{1,2}[./]\d{4}\b'),      "[TARİH]"),
     (re.compile(r'\bTR\d{2}[\s]?(\d{4}[\s]?){5}\d{2}\b', re.IGNORECASE), "[IBAN]"),
-    (re.compile(r'\b[A-ZÇĞİÖŞÜ][a-zçğışöüA-ZÇĞİÖŞÜ]{1,}\s[A-ZÇĞİÖŞÜ][a-zçğışöüA-ZÇĞİÖŞÜ]{1,}(\s[A-ZÇĞİÖŞÜ][a-zçğışöüA-ZÇĞİÖŞÜ]{1,})?'), "[İSİM]"),
+    (re.compile(r'\b[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}\b'), "[EPOSTA]"),
+    (re.compile(r'\b[1-9]\d{10}\b'),                      "[KİMLİK_NO]"),
+    (re.compile(r'(?:\+90|0)[\s\-]?\d{3}[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}\b'), "[TELEFON]"),
+    (re.compile(r'\b\d{1,2}[./]\d{1,2}[./]\d{4}\b'),      "[TARİH]"),
 ]
 
 def anonymize_pii(text: str) -> tuple[str, list]:
+    if not text:
+        return "", []
     found = []
+
+    # 1. Bağlamlı isim tespiti (örn: "Adım Ahmet Yılmaz", "İsmim Mehmet Can")
+    def _mask_name(match):
+        found.append("İSİM")
+        # Ön ek ("Adım ", "ben " vb.) korunur, isim kısmı [İSİM] yapılır
+        full = match.group(0)
+        name_part = match.group(1)
+        return full.replace(name_part, "[İSİM]")
+
+    text, name_subs = NAME_CONTEXT_PATTERN.subn(_mask_name, text)
+
+    # 2. Standart PII desenleri
     for pattern, replacement in PII_PATTERNS:
         matches = pattern.findall(text)
         if matches:
             found.append(replacement.strip("[]"))
             text = pattern.sub(replacement, text)
-    return text, found
+
+    return text, list(dict.fromkeys(found))
 
 # ─────────────────────────────────────────────────────────
 # 2. XAI – Risk anahtar kelimeleri
@@ -288,11 +310,18 @@ def analyze():
         if len(combined) < 20:
             return jsonify({"error": "Lütfen daha fazla bilgi girin."}), 400
 
-        clean_text, pii_found = anonymize_pii(combined)
+        # PII maskelemesi yalnızca kullanıcının serbest metnine uygulanır
+        # (structured_to_narrative klinik şablon çıktısının bozulmaması için)
+        clean_free_text, pii_found = anonymize_pii(free_text)
+        clean_text = "\n".join(filter(None, [narrative, clean_free_text]))
+        combined_display = "\n".join(filter(None, [narrative, free_text]))
         
+        if len(clean_text) < 20:
+            return jsonify({"error": "Lütfen daha fazla bilgi girin."}), 400
+
         risk_result = predict_risk(clean_text)
-        keywords    = extract_keywords(combined)
-        highlighted = highlight_text(combined, keywords)
+        keywords    = extract_keywords(combined_display)
+        highlighted = highlight_text(combined_display, keywords)
         context = retrieve_context(clean_text)
 
         llm_text = ""
