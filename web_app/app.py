@@ -25,8 +25,9 @@ BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
 PARENT_DIR     = os.path.dirname(BASE_DIR)
 MODEL_PATH     = os.path.join(PARENT_DIR, "models", "Kanser_Riski_Modeli_Temiz")
 REHBER_PATH    = os.path.join(PARENT_DIR, "tibbi_rehber.txt")
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip()
+GEMINI_API_KEY = os.environ.get("API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+GEMINI_API_KEY = GEMINI_API_KEY.strip()
+GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip()
 
 _llm_model = None
 if GEMINI_API_KEY:

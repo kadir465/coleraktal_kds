@@ -9,9 +9,10 @@ import google.generativeai as genai
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 
-# Ortam değişkenlerinden yapılandırma
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "").strip()
-GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-1.5-flash").strip()
+# Ortam değişkenlerinden yapılandırma (Hugging Face Spaces Secret uyumu: API_KEY veya GEMINI_API_KEY)
+GEMINI_API_KEY = os.environ.get("API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or ""
+GEMINI_API_KEY = GEMINI_API_KEY.strip()
+GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash").strip()
 
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -33,12 +34,12 @@ if GEMINI_API_KEY:
     try:
         genai.configure(api_key=GEMINI_API_KEY)
         _llm_model = genai.GenerativeModel(GEMINI_MODEL_NAME)
-        logger.info(f"Gemini LLM yapılandırıldı. Model: {GEMINI_MODEL_NAME}")
+        logger.info(f"Gemini LLM başarıyla yapılandırıldı. Model: {GEMINI_MODEL_NAME}")
     except Exception as e:
         logger.error(f"Gemini yapılandırma hatası: {e}")
         _llm_model = None
 else:
-    logger.warning("GEMINI_API_KEY tanımlı değil. LLM açıklamaları devre dışı.")
+    logger.warning("API_KEY ortam değişkeni bulunamadı. LLM özellikleri devre dışı.")
 
 _electra_model     = None
 _electra_tokenizer = None
